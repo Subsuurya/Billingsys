@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Invoices from "./pages/Invoices.jsx";
+import Customers from "./pages/Customers.jsx";
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
@@ -13,6 +14,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/invoices" element={<Invoices />} />
+      <Route path="/customers" element={<Customers />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
