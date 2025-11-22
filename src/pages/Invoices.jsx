@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Eye, Trash2, SquarePen, Funnel, Plus, Play, Pause, Calendar } from "lucide-react";
+import { Eye, Trash2, SquarePen, Funnel, Plus, Play, Pause, Calendar, X } from "lucide-react";
 
 const Invoices = () => {
   const [activeTab, setActiveTab] = useState("invoices");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
   const [activeStatus, setActiveStatus] = useState(true);
+  const [recurrenceType, setRecurrenceType] = useState("Daily");
+  const [endType, setEndType] = useState("None"); 
 
   // INVOICE DATA
   const invoices = [
@@ -124,16 +126,21 @@ const Invoices = () => {
     return "bg-gray-100 text-gray-800";
   };
 
+  const dayOptions = [
+    "1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th",
+    "11th","12th","13th","14th","15th","16th","17th","18th","19th","20th",
+    "21st","22nd","23rd","24th","25th","26th","27th","28th", "Last Day"
+  ];
+
   // STATUS COLOR - RECURRING
   const getRecurringStatusColor = (status) =>
     status === "Active"
       ? "bg-green-100 text-green-800"
       : "bg-gray-100 text-gray-600";
-
-  return (
+    return (
     <div className="min-h-screen bg-gray-50">
       {/* MAIN CONTAINER */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* HEADER */}
           <div className="px-6 py-4 border-b border-gray-200">
@@ -214,7 +221,7 @@ const Invoices = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {invoices.map((invoice) => (
                       <tr key={invoice.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-900 font-medium cursor-pointer hover:text-[#660033]">
+                        <td className="px-6 py-4 text-sm text-gray-800">
                           {invoice.id}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-800">{invoice.customer}</td>
@@ -270,13 +277,13 @@ const Invoices = () => {
                         <th className="px-6 py-3">Next Run Date</th>
                         <th className="px-6 py-3">Status</th>
                         <th className="px-6 py-3">Auto-Generated</th>
-                        <th className="px-6 py-3">Actions</th>
+                        <th className="px-6 py-3"></th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {recurringSchedules.map((sched) => (
                         <tr key={sched.template} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-[#660033] cursor-pointer">
+                          <td className="px-6 py-4 text-sm text-gray-800">
                             {sched.template}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-800">{sched.customer}</td>
@@ -339,13 +346,13 @@ const Invoices = () => {
                         <th className="px-6 py-3">Total (RM)</th>
                         <th className="px-6 py-3">Generated Date</th>
                         <th className="px-6 py-3">Due Date</th>
-                        <th className="px-6 py-3">Actions</th>
+                        <th className="px-6 py-3"></th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {draftInvoices.map((draft) => (
                         <tr key={draft.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-[#660033] cursor-pointer">
+                          <td className="px-6 py-4 text-sm text-gray-800">
                             {draft.id}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-800">{draft.customer}</td>
@@ -353,7 +360,7 @@ const Invoices = () => {
                           <td className="px-6 py-4 text-sm text-gray-800">{draft.generatedDate}</td>
                           <td className="px-6 py-4 text-sm text-gray-800">{draft.dueDate}</td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center gap-4">
                               <button className="text-sm px-5 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 hover:cursor-pointer">
                                 Review
                               </button>
@@ -375,172 +382,568 @@ const Invoices = () => {
 
       {/* ====================== CREATE INVOICE MODAL ====================== */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/10">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Create New Invoice</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          {/* MODAL CARD */}
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+
+            {/* STICKY HEADER */}
+            <div className="flex-shrink-0 sticky top-0 z-20 bg-white border-b border-gray-200 px-8 py-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Create New Invoice
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 hover:cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* BODY */}
-            <div className="p-8 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Invoice Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. INV-2025-001"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  />
+            <div className="flex-1 overflow-y-auto px-8 py-8">
+              <div className="space-y-3">
+                {/* TOP ROW */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Invoice Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. INV-2025-001"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Invoice Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Due Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Invoice Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Customer <span className="text-red-500">*</span>
+                    </label>
+                    <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option>Select customer</option>
+                      <option>John Doe</option>
+                      <option>ABC Corp</option>
+                      <option>XYZ Ltd</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Customer Reference
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="PO12345"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Customer <span className="text-red-500">*</span>
+                    Sales Agent (Optional)
                   </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-md">
-                    <option>Select customer</option>
-                    <option>John Doe</option>
-                    <option>ABC Corp</option>
-                    <option>XYZ Ltd</option>
+                  <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>Select agent</option>
+                    <option>Agent K</option>
+                    <option>Agent L</option>
                   </select>
                 </div>
+
+                {/* LINE ITEMS */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Customer Reference (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="PO12345"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sales Agent (Optional)
-                </label>
-                <select className="w-full px-4 py-2 border border-gray-300 rounded-md">
-                  <option>Select agent</option>
-                  <option>Agent K</option>
-                  <option>Agent L</option>
-                </select>
-              </div>
-
-              {/* ADD ITEMS */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                  Product Line Items
-                </h4>
-                <div className="border border-gray-300 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Product</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Quantity</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Unit Price</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Tax</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Total</th>
-                        <th className="w-12"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {lineItems.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-3">
-                            <select
-                              value={item.product}
-                              onChange={(e) => updateLineItem(item.id, "product", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            >
-                              <option value="">Select product</option>
-                              <option>Web Design Service</option>
-                              <option>Logo Design</option>
-                              <option>Hosting Plan</option>
-                            </select>
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={item.quantity}
-                              onChange={(e) => updateLineItem(item.id, "quantity", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              value={item.unitPrice}
-                              onChange={(e) => updateLineItem(item.id, "unitPrice", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              value={item.tax}
-                              onChange={(e) => updateLineItem(item.id, "tax", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-right font-medium">
-                            {(
-                              (parseFloat(item.quantity) || 0) *
-                                (parseFloat(item.unitPrice) || 0) +
-                              (parseFloat(item.tax) || 0)
-                            ).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <button
-                              onClick={() => removeLineItem(item.id)}
-                              disabled={lineItems.length === 1}
-                              className="text-red-600 hover:text-red-800 disabled:opacity-30 hover:cursor-pointer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                    Product Line Items
+                  </h4>
+                  <div className="border border-gray-300 rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Product</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Quantity</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Unit Price</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Tax</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Total</th>
+                          <th className="w-12"></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {lineItems.map((item) => (
+                          <tr key={item.id}>
+                            <td className="px-4 py-3">
+                              <select
+                                value={item.product}
+                                onChange={(e) => updateLineItem(item.id, "product", e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Select product</option>
+                                <option>Web Design Service</option>
+                                <option>Logo Design</option>
+                                <option>Hosting Plan</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={item.quantity}
+                                onChange={(e) => updateLineItem(item.id, "quantity", e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={item.unitPrice}
+                                onChange={(e) => updateLineItem(item.id, "unitPrice", e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={item.tax}
+                                onChange={(e) => updateLineItem(item.id, "tax", e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium">
+                              {(
+                                (parseFloat(item.quantity) || 0) *
+                                  (parseFloat(item.unitPrice) || 0) +
+                                (parseFloat(item.tax) || 0)
+                              ).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => removeLineItem(item.id)}
+                                disabled={lineItems.length === 1}
+                                className="text-red-600 hover:text-red-800 disabled:opacity-30 hover:cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <button
+                    onClick={addLineItem}
+                    className="mt-4 flex items-center text-[#660033] text-sm font-medium hover:underline hover:cursor-pointer">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Item
+                  </button>
                 </div>
+
+                {/* SUMMARY */}
+                <div className="max-w-xs ml-auto space-y-2 bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium">RM {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tax:</span>
+                    <span className="font-medium">RM {totalTax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t border-gray-300 text-lg font-bold text-gray-900">
+                    <span>Total Amount:</span>
+                    <span>RM {grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="flex-shrink-0 sticky bottom-0 z-20 bg-white border-t border-gray-200 px-8 py-5 shadow-lg">
+              <div className="flex justify-end gap-3">
                 <button
-                  onClick={addLineItem}
-                  className="mt-4 flex items-center text-[#660033] text-sm font-medium hover:underline hover:cursor-pointer"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2.5 text-sm font-medium text-[#660033] bg-white border border-[#660033] rounded-lg hover:cursor-pointer"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Item
+                  Cancel
+                </button>
+                <button className="px-6 py-2.5 text-sm font-medium text-[#660033] bg-white border border-[#660033] rounded-lg hover:cursor-pointer">
+                  Save As Draft
+                </button>
+                <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#660033] rounded-lg hover:cursor-pointer">
+                  Submit
                 </button>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ================= CREATE RECURRING SCHEDULE MODAL ================= */}
+      {isRecurringModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[92vh] flex flex-col overflow-hidden">
+
+            {/* HEADER */}
+            <div className="flex-shrink-0 sticky top-0 z-10 bg-white px-8 py-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Create Recurring Invoice Schedule
+                </h3>
+                <button
+                  onClick={() => setIsRecurringModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* BODY */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {/* ============ 2-COLUMN LAYOUT ============ */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                {/* LEFT SIDE */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Template Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Customer Code
+                      </label>
+                      <input 
+                      type="text" 
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name
+                      </label>
+                      <input type="text" className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input type="email" className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    ></textarea>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Sales Agent
+                      </label>
+                      <input type="text" className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Credit Term
+                      </label>
+                      <input type="text" className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT SIDE */}
+                <div className="rounded-xl p-6 space-y-3 shadow-lg">
+
+                  {/* STATUS */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Create New Invoice with Status:
+                    </label>
+                    <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option>Draft</option>
+                      <option>Approved</option>
+                      <option>Pending</option>
+                    </select>
+                  </div>
+
+                  {/* DAYS IN ADVANCE */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Create days in advance:
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* RECURRENCE PATTERN */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Recurrence Pattern
+                    </label>
+
+                    {/* TOP SELECTOR (ALWAYS VISIBLE) */}
+                    <div className="flex items-center gap-3 flex-nowrap">
+                      <select
+                        className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={recurrenceType}
+                        onChange={(e) => setRecurrenceType(e.target.value)}
+                      >
+                        <option>Daily</option>
+                        <option>Weekly</option>
+                        <option>Monthly</option>
+                        <option>Yearly</option>
+                      </select>
+
+                      {/* DAILY */}
+                      {recurrenceType === "Daily" && (
+                        <div className="flex flex-nowrap items-center gap-2">
+                          <span className="text-sm text-gray-600 ">every</span>
+
+                          <input
+                            type="number"
+                            placeholder="1"
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+
+                          <span className="text-sm text-gray-600">day(s)</span>
+                        </div>
+                      )}
+
+                      {/* WEEKLY */}
+                      {recurrenceType === "Weekly" && (
+                        <div className="flex flex-nowrap items-center gap-2">
+                          <span className="text-sm text-gray-600">every</span>
+
+                          <input
+                            type="number"
+                            placeholder="1"
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+
+                          <span className="text-sm text-gray-600">week(s) on</span>
+
+                          <select className="px-3 py-2 border border-gray-300 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Monday</option>
+                            <option>Tuesday</option>
+                            <option>Wednesday</option>
+                            <option>Thursday</option>
+                            <option>Friday</option>
+                            <option>Saturday</option>
+                            <option>Sunday</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* MONTHLY */}
+                      {recurrenceType === "Monthly" && (
+                        <div className="flex flex-nowrap items-center gap-2">
+                          <span className="text-sm text-gray-600">on</span>
+
+                          <select className="px-3 py-2 border border-gray-300 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {dayOptions.map((d) => (
+                              <option key={d}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* YEARLY */}
+                      {recurrenceType === "Yearly" && (
+                        <div className="flex flex-nowrap items-center gap-2">
+                          <span className="text-sm text-gray-600">every</span>
+
+                          <select className="px-3 py-2 border border-gray-300 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {[
+                              "January","February","March","April","May","June",
+                              "July","August","September","October","November","December"
+                            ].map((m) => (
+                              <option key={m}>{m}</option>
+                            ))}
+                          </select>
+
+                          <select className="px-3 py-2 border border-gray-300 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {dayOptions.map((d) => (
+                              <option key={d}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RANGE OF RECURRENCE */}
+                  <p className="text-sm font-medium text-gray-700 mb-2">Range of Recurrence</p>
+                  <div className="flex items-end gap-4">
+                    {/* START DATE */}
+                    <div className="flex flex-col w-full max-w-[200px]">
+                      <label className="text-sm font-medium text-gray-700 mb-1">Start date</label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* END SELECT */}
+                    <div className="flex flex-col w-full max-w-[120px]">
+                      <label className="text-sm font-medium text-gray-700 mb-1">End</label>
+                      <select
+                        value={endType}
+                        onChange={(e) => setEndType(e.target.value)}
+                        className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="none">None</option>
+                        <option value="by">By</option>
+                        <option value="after">After</option>
+                      </select>
+                    </div>
+
+                    {/* CONDITIONAL FIELD — END DATE */}
+                    {endType === "by" && (
+                      <div className="flex flex-col w-full max-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 mb-1">End date</label>
+                        <div className="relative">
+                          <input
+                            type="date"
+                            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CONDITIONAL FIELD — OCCURRENCES */}
+                    {endType === "after" && (
+                      <div className="flex items-end gap-2">
+                        <div className="flex flex-col w-full max-w-[120px]">
+                          <label className="text-sm font-medium text-gray-700 mb-1">Occurrences</label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ============ LINE ITEMS TABLE ============ */}
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Description</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Quantity</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Unit Price</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Tax</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-800 uppercase">Total</th>
+                      <th className="w-12"></th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      {/* PRODUCT */}
+                      <td className="px-4 py-3">
+                        <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option>Select product</option>
+                        </select>
+                      </td>
+                      {/* DESCRIPTION */}
+                      <td className="px-4 py-3">
+                        <input
+                          type="text"
+                          placeholder="Description"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </td>
+                      {/* QTY */}
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </td>
+                      {/* UNIT PRICE */}
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </td>
+                      {/* TAX */}
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </td>
+                      {/* TOTAL */}
+                      <td className="px-4 py-3 text-right font-medium">
+                        0.00
+                      </td>
+                      {/* ACTIONS */}
+                      <td className="px-4 py-3 text-center">
+                        <button className="text-red-600 hover:text-red-800 hover:cursor-pointer">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button className="flex items-center text-[#660033] text-sm font-medium hover:underline hover:cursor-pointer">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Item
+              </button>
 
               {/* SUMMARY */}
               <div className="max-w-xs ml-auto space-y-2 bg-gray-50 p-4 rounded-lg">
@@ -557,98 +960,20 @@ const Invoices = () => {
                   <span>RM {grandTotal.toFixed(2)}</span>
                 </div>
               </div>
+
             </div>
 
             {/* FOOTER */}
-            <div className="flex justify-end gap-3 px-8 py-5 border-t border-gray-200">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2.5 text-sm font-medium text-[#660033] bg-white border border-[#660033] rounded-lg hover:cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button className="px-6 py-2.5 text-sm font-medium text-[#660033] bg-white border border-[#660033] rounded-lg hover:cursor-pointer">
-                Save As Draft
-              </button>
-              <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#660033] rounded-lg hover:cursor-pointer">
-                Submit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= CREATE RECURRING SCHEDULE MODAL ================= */}
-      {isRecurringModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/10">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 space-y-4">
-
-            {/* HEADER */}
-            <h2 className="text-xl font-semibold text-gray-800">
-              Create Recurring Invoice Schedule
-            </h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Select Invoice</label>
-              <input
-                type="text"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time Period <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder=""
-                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Custom Days (if applicable)</label>
-              <input
-                type="text"
-                placeholder=""
-                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Next Run Date *</label>
-
-              <div className="relative mt-1">
-                <input
-                  type="date"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <label className="text-sm font-medium text-gray-700">Active Status</label>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={activeStatus}
-                  onChange={() => setActiveStatus(!activeStatus)}
-                />
-                <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#660033] transition-colors duration-300"></div>
-                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-5"></div>
-              </label>
-            </div>
-
-            {/* FOOTER BUTTONS */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="sticky bottom-0 left-0 right-0 flex justify-end gap-3 px-8 py-5 bg-white border-t border-gray-200 shadow-lg">
               <button
                 onClick={() => setIsRecurringModalOpen(false)}
-                className="px-6 py-2 text-sm font-medium text-[#660033] border border-[#660033] rounded-lg hover:bg-gray-50 hover:cursor-pointer">
+                className="px-6 py-2.5 text-sm font-medium text-[#660033] bg-white border border-[#660033] rounded-lg hover:cursor-pointer">
                 Cancel
               </button>
-
-              <button className="px-6 py-2 text-sm font-medium text-white bg-[#660033] rounded-lg hover:bg-[#4f0026] hover:cursor-pointer">
+              <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#660033] rounded-lg hover:cursor-pointer">
                 Create Schedule
               </button>
             </div>
-
           </div>
         </div>
       )}
